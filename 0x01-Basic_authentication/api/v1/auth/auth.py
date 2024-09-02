@@ -1,37 +1,50 @@
 #!/usr/bin/env python3
-"""Authentication module.
+"""
+Module that creates a class to manage
+API authentication
 """
 from flask import request
-from typing import List, TypeVar
-import fnmatch
+from typing import List, Optional, TypeVar
+import re
 
 
 class Auth:
-    """Authentication class.
     """
-    def require_auth(self, path: str, excluded_paths: List[str]) -> bool:
-        """ Method to check if auth is required.
+    Class template for the authentication
+    system
+    """
+    def require_auth(self, path: str, excluded_path: List[str]) -> bool:
+        """
+        Returns False if path is in excluded_path
         """
         if path is None:
             return True
-
-        if excluded_paths is None or not excluded_paths:
+        if excluded_path is None or len(excluded_path) == 0:
             return True
-
-        for excluded_path in excluded_paths:
-            if fnmatch.fnmatch(path, excluded_path):
+        if path:
+            for exclude in excluded_path:
+                last_tag = exclude.split('/')[-1]
+                if last_tag.endswith('*'):
+                    last_tag = last_tag[0:-1]
+                    if last_tag in path:
+                        return False
+            if path in excluded_path or path + '/' in excluded_path:
                 return False
-
         return True
 
-    def authorization_header(self, request=None) -> str:
-        """ Method to get authorization header.
+    def authorization_header(self, request=None) -> Optional[str]:
         """
-        if request is not None:
-            return request.headers.get('Authorization', None)
+        Returns None or str accrding to request
+        """
+        if not request:
+            return None
+        authorization = request.headers.get('Authorization')
+        if authorization:
+            return authorization
         return None
 
     def current_user(self, request=None) -> TypeVar('User'):
-        """ Method to get user from request.
+        """
+        Returns None or User according to request
         """
         return None
